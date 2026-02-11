@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+
 class MensajeController extends Controller
 {
     //mostrar fomulario 
@@ -12,44 +13,56 @@ class MensajeController extends Controller
     }
 
     //(AJAX) guardar mensaje 
-    public function guardar(Request $request){
-        $request -> validate ([
+   public function guardar(Request $request)
+{
+    $request->validate([
         'nombre' => 'required',
         'email' => 'required|email',
-        'mensaje' => 'required']);
+        'mensaje' => 'required'
+    ]);
 
-        $nuevomensaje = [
-            'nombre' => $request->nombre,
-            'email' => $request->email,
-            'mensaje' => $request->mensaje,
-            'fecha' => now()->toDateString()
-        ];
+    $nuevoMensaje = [
+        'nombre' => $request->nombre,
+        'email' => $request->email,
+        'mensaje' => $request->mensaje,
+        'fecha' => now()->toDateTimeString()
+    ];
 
-        $path = 'mensaje.json';
+    $path = 'mensajes.json';
 
-        if(Storage::exists($path)){
-            $mensaje = json_decode(Storage::get($path), true);
-        }else{
-            $mensaje = [];
-        }
-
-        $mensaje[] = $nuevomensaje;
-
-        Storage::put($path, json_encode($mensaje, JSON_PRETTY_PRINT));
-        return response()->json(['sucess correcto'=>true]);
+    if (!Storage::exists($path)) {
+        Storage::put($path, json_encode([]));
     }
+
+    $contenido = Storage::get($path);
+    $mensajes = json_decode($contenido, true);
+
+    if (!$mensajes) {
+        $mensajes = [];
+    }
+
+    $mensajes[] = $nuevoMensaje;
+
+    Storage::put($path, json_encode($mensajes, JSON_PRETTY_PRINT));
+
+    return response()->json(['success' => true]);
+}
+
 
     //mostrar
 
-    public function registros(){
-        $path = 'mensaje.json';
-        if(Storage::exists($path)){
-            $mensaje = json_decode(Storage::get($path),true);
-        }else{
-            $mensaje = [];
-        }
+    public function registros()
+{
+    $path = 'mensajes.json';
 
-        return view('registros', compact('mensaje'));
+    if (Storage::exists($path)) {
+        $mensajes = json_decode(Storage::get($path), true);
+    } else {
+        $mensajes = [];
     }
+
+    return view('registros', compact('mensajes'));
+}
+
 
 }
